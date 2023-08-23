@@ -1,4 +1,3 @@
-import 'package:consulta_cep_dio/controller/cep_controller.dart';
 import 'package:consulta_cep_dio/model/cep.dart';
 import 'package:consulta_cep_dio/view/create_cep.dart';
 import 'package:dio/dio.dart';
@@ -15,14 +14,34 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  CepController cepController = CepController();
   final Dio dio = Dio();
+  List<CEP> cepList = <CEP>[].obs;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    cepController.getCeps();
+    getCeps();
+  }
+
+  Future<void> getCeps() async {
+    dio.options.headers = {
+      'X-Parse-Application-Id': 'gI2AjpmKfwBzSWi9oM1NA6IS1yEMtSOo02T1jmho',
+      'X-Parse-REST-API-Key': 'dPLailxs59y8EaZl9I64Fw05TorTiKevZ0Tgxjfy',
+    };
+
+    try {
+      final response = await dio
+          .post('https://parseapi.back4app.com/parse/functions/get-cep-info');
+
+      if (response.data["result"] != null) {
+        cepList = (response.data["result"] as List)
+            .map((data) => CEP.fromJson(data))
+            .toList();
+      }
+      setState(() {});
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override
@@ -34,9 +53,9 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Obx(
         () => ListView.builder(
-          itemCount: cepController.cepList.length,
+          itemCount: cepList.length,
           itemBuilder: (BuildContext context, int index) {
-            CEP cep = cepController.cepList[index];
+            CEP cep = cepList[index];
             return Padding(
               padding: const EdgeInsets.all(20.0),
               child: SingleChildScrollView(
@@ -70,7 +89,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add_outlined),
+        child: Icon(Icons.search_outlined),
         onPressed: () {
           Get.to(CreateCep());
         },
